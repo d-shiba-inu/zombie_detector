@@ -4,12 +4,20 @@
 
 require "zombie_detector/version"
 require "zombie_detector/detector"
+require "zombie_detector/duplicate_checker"
 
 module ZombieDetector
   class << self
     # ショートカットメソッド: ZombieDetector.score(user_data) で呼べるようにする
+    # アカウント単体判定（FF比など）
     def score(user_data)
       Detector.new(user_data).score
+    end
+
+    # リプライ一覧をまとめてゾンビ判定する
+    # ZombieDetector.detect_duplicates(replies) で呼べるようにする
+    def detect_duplicates(replies)
+      DuplicateChecker.new(replies).analyze
     end
 
     # ゾンビかどうかを真偽値で返す便利なメソッド
