@@ -11,7 +11,7 @@ module ZombieDetector
     # ショートカットメソッド: ZombieDetector.score(user_data) で呼べるようにする
     # アカウント単体判定（FF比など）
     def score(user_data)
-      Detector.new(user_data).score
+      Detector.new(user_data).score # Detector側のメソッド名に合わせて調整
     end
 
     # リプライ一覧をまとめてゾンビ判定する
@@ -20,9 +20,9 @@ module ZombieDetector
       DuplicateChecker.new(replies).analyze
     end
 
-    # ゾンビかどうかを真偽値で返す便利なメソッド
-    def zombie?(user_data, threshold: 50)
-      score(user_data) >= threshold
+    # ゾンビかどうかを真偽値で返すメソッド
+    def zombie?(user_data)
+      score(user_data) >= 60
     end
   end
 end
