@@ -18,6 +18,11 @@ module ZombieDetector
 
     private
 
+    # 🌟 キーが文字列でもシンボルでも取得できる補助メソッド
+    def fetch(key)
+      @user[key.to_s] || @user[key.to_sym]
+    end
+
     # 条件2: アカウント作成が半年前以内
     def check_account_age
       return 0 if @user['created_at'].nil?
@@ -45,7 +50,9 @@ module ZombieDetector
 
     # 条件4: ブルーバッジ加点
     def check_verified_bonus
-      @user['verified'] ? 15 : 0
+      # 🌟 verified の値が true もしくは "true" なら加点
+      val = fetch('verified')
+      (val == true || val == "true") ? 15 : 0
     end
   end
 end
