@@ -10,6 +10,8 @@ module ZombieDetector
     end
 
     def score
+      # 🌟 認証バッジがない人は、何があっても0点
+      return 0 unless @user['verified'] == true
       points = 0
       points += check_default_profile # ✨追加
       points += check_username_pattern # ✨追加
