@@ -30,13 +30,13 @@ module ZombieDetector
         detector = Detector.new(reply)
         base_points = detector.score
 
-        # 合計 100点満点
-        total_score = [jaccard_points + base_points, 100].min
+        # 合計 150点満点
+        total_score = jaccard_points + base_points
 
         # 🌟 RailsのコントローラーやReactが期待するキー名でデータを更新
         reply['similarity_rate'] = max_sim.round(3) # 0.854 のような形式
         reply['score'] = total_score                # 85 のような形式
-        reply['is_zombie_copy'] = total_score >= 60 # 60点以上でゾンビ認定
+        reply['is_zombie_copy'] = total_score >= 80 #  合計点が 80点以上ならゾンビ認定
 
         # 似ていない（オリジナル）投稿なら、以降の比較対象として記憶に追加
         # 類似度が低い(40%未満)かつ、空文字でない場合のみ保存
