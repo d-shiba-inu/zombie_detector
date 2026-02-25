@@ -7,13 +7,15 @@ module ZombieDetector
       @user = user_data
     end
 
-    # 単体での合計スコア（最大50点）
+    # 単体での合計スコア（最大100点に拡張！）
     def score
       points = 0
-      points += check_account_age     # 15点
-      points += check_reciprocal_FF   # 20点
-      points += check_verified_bonus  # 15点
-      points
+      points += check_account_age      # 10点
+      points += check_reciprocal_FF    # 15点
+      points += check_verified_bonus   # 15点
+      points += check_activity_density # 30点 🌟NEW
+      points += check_lang_mismatch    # 30点 🌟NEW
+      [points, 100].min # 最大100点に丸める
     end
 
     private
@@ -23,26 +25,63 @@ module ZombieDetector
       @user[key.to_s] || @user[key.to_sym]
     end
 
+    # 🌟新設①: 投稿密度（1日平均の投稿数）
+    def check_activity_density
+      count = fetch('statuses_count').to_i
+      created_at_str = fetch('user_created_at')
+      return 0 if created_at_str.nil?
+
+      begin
+        created_at = Time.parse(created_at_str)
+        # 経過日数を算出（最低1日とする）
+        days_active = [(Time.now - created_at) / 86400, 1].max
+        tweets_per_day = count.to_f / days_active
+
+        # 1日平均 50投稿以上で 15点、100投稿以上で 30点（人間離れ判定）
+        if tweets_per_day > 100
+          30
+        elsif tweets_per_day > 50
+          15
+        else
+          0
+        end
+      rescue
+        0
+      end
+    end
+
+    # 🌟新設②: 言語ミスマッチ
+    def check_lang_mismatch
+      reply_lang = fetch('reply_lang')
+      profile_lang = fetch('profile_lang')
+
+      # 本文が日本語(ja)なのに、プロフが日本語以外（かつ判定不能以外）なら加点
+      if reply_lang == 'ja' && profile_lang != 'ja' && profile_lang != 'un'
+        30
+      else
+        0
+      end
+    end
+
     # 条件2: アカウント作成が半年前以内
     def check_account_age
-      return 0 if @user['created_at'].nil?
-      # begin...rescue で囲むのが Ruby の最も標準的で安全な書き方です
+      created_at_str = fetch('user_created_at') # 統一して user_created_at を見る
+      return 0 if created_at_str.nil?
       begin
-        created_at = Time.parse(@user['created_at'])
-        (Time.now - created_at) < 180 * 24 * 60 * 60 ? 15 : 0
+        created_at = Time.parse(created_at_str)
+        (Time.now - created_at) < 180 * 24 * 60 * 60 ? 10 : 0
       rescue
-        0 # 解析に失敗したら 0点を返す
+        0
       end
     end
 
     # 条件3: 相互フォロー水増し判定
     def check_reciprocal_FF
-      followers = @user['followers_count'].to_i
-      following = @user['following_count'].to_i
+      followers = fetch('followers_count').to_i
+      following = fetch('following_count').to_i
       return 0 if following == 0
-      # 500人以上 かつ FF比がほぼ1:1（0.8〜1.2）
       if followers >= 500 && (followers.to_f / following).between?(0.8, 1.2)
-        20
+        15
       else
         0
       end
@@ -50,7 +89,6 @@ module ZombieDetector
 
     # 条件4: ブルーバッジ加点
     def check_verified_bonus
-      # 🌟 verified の値が true もしくは "true" なら加点
       val = fetch('verified')
       (val == true || val == "true") ? 15 : 0
     end
