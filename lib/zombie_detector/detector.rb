@@ -7,15 +7,22 @@ module ZombieDetector
       @user = user_data
     end
 
-    # 単体での合計スコア（最大100点に拡張！）
+    # 🌟 新しい：内訳をハッシュで返すメソッド
+    def breakdown
+      details = {
+        age: check_account_age, # 10点
+        ff_ratio: check_reciprocal_FF, # 15点
+        verified: check_verified_bonus, # 15点
+        density: check_activity_density, # 30点
+        lang: check_lang_mismatch # 30点
+      }
+      total = [details.values.sum, 100].min
+      { total: total, details: details } # 単体での合計スコア（最大100点に丸める）
+    end
+
+    # 🌟 scoreメソッドもbreakdownを使うようにしてスリムに
     def score
-      points = 0
-      points += check_account_age      # 10点
-      points += check_reciprocal_FF    # 15点
-      points += check_verified_bonus   # 15点
-      points += check_activity_density # 30点 🌟NEW
-      points += check_lang_mismatch    # 30点 🌟NEW
-      [points, 100].min # 最大100点に丸める
+      breakdown[:total]
     end
 
     private
